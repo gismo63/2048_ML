@@ -172,7 +172,7 @@ def newBoard(board, move):#################################################HERE
                         if board[BOARDHEIGHT-i-1][BOARDHEIGHT-pos] == 0:
                             pos -= 1
                         elif board[BOARDHEIGHT-i-1][BOARDHEIGHT-pos] == board[BOARDHEIGHT-i-1][BOARDHEIGHT-j-1]:
-                            newScore+=board[i][j]*2
+                            newScore+=board[BOARDHEIGHT-i-1][BOARDHEIGHT-j-1]*2
                             board[BOARDHEIGHT-i-1][BOARDHEIGHT-pos] *= 2
                             edge = pos
                             board[BOARDHEIGHT-i-1][BOARDHEIGHT-j-1] = 0
@@ -198,7 +198,7 @@ def newBoard(board, move):#################################################HERE
                         if board[BOARDHEIGHT-pos][BOARDHEIGHT-j-1] == 0:
                             pos -= 1
                         elif board[BOARDHEIGHT-pos][BOARDHEIGHT-j-1] == board[BOARDHEIGHT-i-1][BOARDHEIGHT-j-1]:
-                            newScore+=board[i][j]*2
+                            newScore+=board[BOARDHEIGHT-i-1][BOARDHEIGHT-j-1]*2
                             board[BOARDHEIGHT-pos][BOARDHEIGHT-j-1] *= 2
                             edge = pos
                             board[BOARDHEIGHT-i-1][BOARDHEIGHT-j-1] = 0
