@@ -49,17 +49,22 @@ def main():
     NEW_SURF,   NEW_RECT   = makeText('New Game', TEXTCOLOR, TILECOLOR, WINDOWWIDTH - 120, WINDOWHEIGHT - 60)
     SOLVE_SURF, SOLVE_RECT = makeText('Solve',    TEXTCOLOR, TILECOLOR, WINDOWWIDTH - 120, WINDOWHEIGHT - 30)
 
-    startingBoard = [[0,2,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]
-    mainBoard = [[2,2,2,2],[0,2,0,0],[2,0,2,0],[2,0,0,0]]
-    wasChanged = False
+    startingBoard = [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]]
+    startingBoard[random.randint(0,BOARDHEIGHT-1)][random.randint(0,BOARDWIDTH-1)] = 2
+    mainBoard = startingBoard
+    wasChanged = True
+    score = 0
+    scoreAdd = 0
 
     while True: # main game loop
         slideTo = None # the direction, if any, a tile should slide
         startingMsg = 'Press arrow keys to slide.'
-        msg = 'Press arrow keys to slide.' # contains the message to show in the upper left corner.
+        msg = 'Press arrow keys to slide.' + str(score) # contains the message to show in the upper left corner.
         
-
-        drawBoard(mainBoard, msg)
+        
+        if wasChanged:
+            drawBoard(mainBoard, msg)
+        wasChanged = False
 
         checkForQuit()
         for event in pygame.event.get(): # event handling loop
@@ -74,22 +79,15 @@ def main():
             elif event.type == KEYUP:
                 # check if the user pressed a key to slide a tile
                 if event.key in (K_LEFT, K_a):
-                    mainBoard, wasChanged = newBoard(mainBoard, LEFT)
-                    if wasChanged:
-                        drawBoard(mainBoard, msg)
+                    mainBoard, wasChanged, scoreAdd = newBoard(mainBoard, LEFT)
                 elif event.key in (K_RIGHT, K_d):
-                    mainBoard, wasChanged = newBoard(mainBoard, RIGHT)
-                    if wasChanged:
-                        drawBoard(mainBoard, msg)
+                    mainBoard, wasChanged, scoreAdd = newBoard(mainBoard, RIGHT)
                 elif event.key in (K_UP, K_w):
-                    mainBoard, wasChanged = newBoard(mainBoard, UP)
-                    if wasChanged:
-                        drawBoard(mainBoard, msg)
+                    mainBoard, wasChanged, scoreAdd = newBoard(mainBoard, UP)
                 elif event.key in (K_DOWN, K_s):
-                    mainBoard, wasChanged = newBoard(mainBoard, DOWN)
-                    if wasChanged:
-                        drawBoard(mainBoard, msg)
-
+                    mainBoard, wasChanged, scoreAdd = newBoard(mainBoard, DOWN)
+        score+=scoreAdd
+        scoreAdd=0
         pygame.display.update()
         FPSCLOCK.tick(FPS)
 
@@ -110,6 +108,7 @@ def checkForQuit():
 
 def newBoard(board, move):#################################################HERE
     isChanged = False
+    newScore = 0
     if move == LEFT:
         for i in range(BOARDHEIGHT):
             edge = 0 #if combined then edge should be moved past
@@ -120,10 +119,12 @@ def newBoard(board, move):#################################################HERE
                         if board[i][pos-1] == 0:
                             pos -= 1
                         elif board[i][pos-1] == board[i][j]:
+                            newScore+=board[i][j]*2
                             board[i][pos-1] *= 2
                             edge = pos
                             board[i][j] = 0
                             isChanged = True
+                            newScore=board[i][pos-1]
                         else:
                             if pos != j:
                                 board[i][pos] = board[i][j]
@@ -136,15 +137,16 @@ def newBoard(board, move):#################################################HERE
                         board[i][j] = 0
                         isChanged = True
     if move == UP:
-        for j in range(BOARDHEIGHT):
+        for j in range(BOARDWIDTH):
             edge = 0 #if combined then edge should be moved past
-            for i in range(1,BOARDWIDTH):
+            for i in range(1,BOARDHEIGHT):
                 if board[i][j] != 0:
                     pos = i
                     while pos>edge:
                         if board[pos-1][j] == 0:
                             pos -= 1
                         elif board[pos-1][j] == board[i][j]:
+                            newScore+=board[i][j]*2
                             board[pos-1][j] *= 2
                             edge = pos
                             board[i][j] = 0
@@ -170,6 +172,7 @@ def newBoard(board, move):#################################################HERE
                         if board[BOARDHEIGHT-i-1][BOARDHEIGHT-pos] == 0:
                             pos -= 1
                         elif board[BOARDHEIGHT-i-1][BOARDHEIGHT-pos] == board[BOARDHEIGHT-i-1][BOARDHEIGHT-j-1]:
+                            newScore+=board[i][j]*2
                             board[BOARDHEIGHT-i-1][BOARDHEIGHT-pos] *= 2
                             edge = pos
                             board[BOARDHEIGHT-i-1][BOARDHEIGHT-j-1] = 0
@@ -186,15 +189,16 @@ def newBoard(board, move):#################################################HERE
                         board[BOARDHEIGHT-i-1][BOARDHEIGHT-j-1] = 0
                         isChanged = True
     if move == DOWN:
-        for j in range(BOARDHEIGHT):
+        for j in range(BOARDWIDTH):
             edge = 0 #if combined then edge should be moved past
-            for i in range(1,BOARDWIDTH):
+            for i in range(1,BOARDHEIGHT):
                 if board[BOARDHEIGHT-i-1][BOARDHEIGHT-j-1] != 0:
                     pos = i
                     while pos>edge:
                         if board[BOARDHEIGHT-pos][BOARDHEIGHT-j-1] == 0:
                             pos -= 1
                         elif board[BOARDHEIGHT-pos][BOARDHEIGHT-j-1] == board[BOARDHEIGHT-i-1][BOARDHEIGHT-j-1]:
+                            newScore+=board[i][j]*2
                             board[BOARDHEIGHT-pos][BOARDHEIGHT-j-1] *= 2
                             edge = pos
                             board[BOARDHEIGHT-i-1][BOARDHEIGHT-j-1] = 0
@@ -210,7 +214,21 @@ def newBoard(board, move):#################################################HERE
                         board[BOARDHEIGHT-edge-1][BOARDHEIGHT-j-1] = board[BOARDHEIGHT-i-1][BOARDHEIGHT-j-1]
                         board[BOARDHEIGHT-i-1][BOARDHEIGHT-j-1] = 0
                         isChanged = True
-    return board, isChanged
+    if isChanged:
+        zeroInd = []
+        numZeros = 0
+        for i in range(BOARDHEIGHT):
+            for j in range(BOARDWIDTH):
+                if not board[i][j]:
+                    zeroInd.append([i,j])
+                    numZeros+=1
+        zeroLoc = random.randint(0,numZeros-1)
+        if random.randint(0,9):
+            board[zeroInd[zeroLoc][0]][zeroInd[zeroLoc][1]] = 2
+        else:
+            board[zeroInd[zeroLoc][0]][zeroInd[zeroLoc][1]] = 4
+    print(newScore)
+    return board, isChanged, newScore
 
                             
 
