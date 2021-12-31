@@ -53,9 +53,9 @@ def main():
     startingPos = random.sample(range(BOARDHEIGHT*BOARDWIDTH),2)
     for i in startingPos:
         if random.randint(0,9):
-            startingBoard[i//BOARDHEIGHT][i%BOARDHEIGHT] = 1
-        else:
             startingBoard[i//BOARDHEIGHT][i%BOARDHEIGHT] = 2
+        else:
+            startingBoard[i//BOARDHEIGHT][i%BOARDHEIGHT] = 4
     mainBoard = startingBoard
     wasChanged = True
     score = 0
@@ -84,13 +84,13 @@ def main():
             elif event.type == KEYUP:
                 # check if the user pressed a key to slide a tile
                 if event.key in (K_LEFT, K_a):
-                    mainBoard, wasChanged, scoreAdd = newBoardLog(mainBoard, LEFT)
+                    mainBoard, wasChanged, scoreAdd = newBoardNoCopy(mainBoard, LEFT)
                 elif event.key in (K_RIGHT, K_d):
-                    mainBoard, wasChanged, scoreAdd = newBoardLog(mainBoard, RIGHT)
+                    mainBoard, wasChanged, scoreAdd = newBoardNoCopy(mainBoard, RIGHT)
                 elif event.key in (K_UP, K_w):
-                    mainBoard, wasChanged, scoreAdd = newBoardLog(mainBoard, UP)
+                    mainBoard, wasChanged, scoreAdd = newBoardNoCopy(mainBoard, UP)
                 elif event.key in (K_DOWN, K_s):
-                    mainBoard, wasChanged, scoreAdd = newBoardLog(mainBoard, DOWN)
+                    mainBoard, wasChanged, scoreAdd = newBoardNoCopy(mainBoard, DOWN)
         score+=scoreAdd
         scoreAdd=0
         pygame.display.update()
@@ -233,6 +233,87 @@ def newBoard(board, move):#################################################HERE
         else:
             board[zeroInd[zeroLoc][0]][zeroInd[zeroLoc][1]] = 4
     print(newScore)
+    return board, isChanged, newScore
+
+def newBoardNoCopy(board, move):#################################################HERE
+    isChanged = False
+    newScore = 0
+    i = [0]
+    j = [0]
+    if move == LEFT or move == UP:
+        startHeight = 0
+        stopHeight = BOARDHEIGHT
+        startWidth = 1
+        stopWidth = BOARDWIDTH
+        step = 1
+        if move == LEFT:
+            row = i
+            column = j
+        else:
+            print("up")
+            row = j
+            column = i
+    else:
+        startHeight = BOARDHEIGHT-1
+        stopHeight = -1
+        startWidth = BOARDWIDTH-2
+        stopWidth = -1
+        step = -1
+        if move == RIGHT:
+            row = i
+            column = j
+        else:
+            print("down")
+            row = j
+            column = i
+        
+    for a in range(startHeight,stopHeight,step):
+        i[0] = a
+        edge = startWidth-step #if combined then edge should be moved past
+        for b in range(startWidth,stopWidth,step):
+            print(b)
+            j[0] = b
+            rowStart = row[0]
+            columnStart = column[0]
+            if board[row[0]][column[0]] != 0:
+                #print(pos*(step),edge*(step))
+                while j[0]*(step)>edge*(step):
+                    print(row[0],column[0],b,edge)
+                    j[0] -= step
+                    if board[row[0]][column[0]] == 0:
+                        pass
+                    elif board[row[0]][column[0]] == board[rowStart][columnStart]:
+                        newScore+=board[rowStart][columnStart]*2
+                        print(row[0],column[0])
+                        board[row[0]][column[0]] *= 2
+                        edge = j[0]+step
+                        board[rowStart][columnStart] = 0
+                        isChanged = True
+                    else:
+                        if j[0]+step != b:
+                            j[0] += step
+                            board[row[0]][column[0]] = board[rowStart][columnStart]
+                            board[rowStart][columnStart] = 0
+                            isChanged = True
+                        edge = b
+                j[0] = edge
+                if board[row[0]][column[0]] == 0:
+                    board[row[0]][column[0]] = board[rowStart][columnStart]
+                    board[rowStart][columnStart] = 0
+                    isChanged = True
+    if isChanged:
+        zeroInd = []
+        numZeros = 0
+        for i in range(BOARDHEIGHT):
+            for j in range(BOARDWIDTH):
+                if not board[i][j]:
+                    zeroInd.append([i,j])
+                    numZeros+=1
+        zeroLoc = random.randint(0,numZeros-1)
+        if random.randint(0,9):
+            board[zeroInd[zeroLoc][0]][zeroInd[zeroLoc][1]] = 2
+        else:
+            board[zeroInd[zeroLoc][0]][zeroInd[zeroLoc][1]] = 4
     return board, isChanged, newScore
 
                             
